@@ -1,0 +1,8 @@
+{
+  "appId": "com.orcamentos.app",
+  "appName": "Orçamentos",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#000000"
+  }
+}

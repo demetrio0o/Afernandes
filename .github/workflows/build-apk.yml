@@ -25,7 +25,10 @@ jobs:
 
       - name: Preparar site (PDF + logo)
         run: npm run prepare:web
-
+        
+      - name: Instalar ImageMagick
+        run: sudo apt-get update && sudo apt-get install -y imagemagick
+        
       - name: Preparar ícone a partir da logo
         run: |
           mkdir -p assets

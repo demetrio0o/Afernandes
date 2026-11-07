@@ -1,0 +1,54 @@
+name: Gerar APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Instalar dependências
+        run: npm install
+
+      - name: Preparar site (PDF + logo)
+        run: npm run prepare:web
+
+      - name: Preparar ícone a partir da logo
+        run: |
+          mkdir -p assets
+          convert logo.png -background black -alpha remove -alpha off -gravity center -resize 760x760 -extent 1024x1024 assets/icon-only.png
+          convert logo.png -background none -gravity center -resize 600x600 -extent 1024x1024 assets/icon-foreground.png
+          convert -size 1024x1024 xc:black assets/icon-background.png
+          convert -size 2732x2732 xc:black logo.png -gravity center -resize 700x700 -composite assets/splash.png
+          cp assets/splash.png assets/splash-dark.png
+
+      - name: Criar projeto Android
+        run: |
+          npx cap add android
+          npx capacitor-assets generate --android --iconBackgroundColor '#000000' --iconBackgroundColorDark '#000000' --splashBackgroundColor '#000000' --splashBackgroundColorDark '#000000'
+          npx cap sync android
+
+      - name: Compilar APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Publicar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: orcamentos-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
